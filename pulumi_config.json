@@ -1,0 +1,9 @@
+{
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "https://app.datarobot.com/otel",
+    "DATAROBOT_OAUTH_PROVIDERS": "[]",
+    "USE_DATAROBOT_LLM_GATEWAY": "1",
+    "LLM_DEFAULT_MODEL": "datarobot/anthropic/claude-sonnet-4-6",
+    "DATAROBOT_USE_CASE_ID": "6aa73b07c7478ccb128c3a01",
+    "OTEL_ENTITY_ID": "experiment_container-6aa73b07c7478ccb128c3a01",
+    "AGENT_DEPLOYMENT_ID": "6aa773be2bfc2d3179a39cef"
+}

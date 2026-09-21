@@ -1,0 +1,124 @@
+---
+# Runtime guardrails for the Clinical Data Integrity Agent.
+#
+# Loaded automatically by the `datarobot_moderation` middleware declared in
+# workflow.yaml (no inline `moderation:` block, so this file is used). Guards run
+# on the DEPLOYED agent (DRAgent front server):
+#   - stage: prompt   -> evaluates the incoming prompt before the LLM runs;
+#                        blocked prompts never reach the model.
+#   - stage: response -> evaluates the agent's output before it is returned.
+#
+# Because the encounter chat is routed through the deployed agent, these guards
+# apply to that Q&A as well as any other agent traffic. This is the production
+# reason to route through DataRobot rather than calling the LLM Gateway directly.
+#
+# Set DISABLE_MODERATION=true to turn all guards off at runtime. DATAROBOT_ENDPOINT
+# and DATAROBOT_API_TOKEN must be set for DataRobot-backed guards.
+#
+# NOTE ON FIELD NAMING: this file uses camelCase field names (ootbType, modelInfo,
+# inputColumnName, targetName, targetType, deploymentId, nimEndpoint) as required
+# by the datarobot-moderations guard schema. (Some docs show snake_case ootb_type;
+# the loader validates camelCase.)
+#
+# Guard backends and what each one needs:
+#   * token_count        -> local computation, no external resource. ACTIVE below.
+#   * PII / PHI          -> a DEPLOYED guard model (type: model) + 24-char
+#                           deploymentId. There is NO out-of-the-box PII ootbType.
+#                           Placeholder below; fill PII_GUARD_DEPLOYMENT_ID once
+#                           the model is deployed.
+#   * prompt injection   -> ootbType nim_jailbreak, requires an NVIDIA NIM guard
+#                           endpoint (nimEndpoint). Placeholder below.
+#   * toxicity/unsafe    -> ootbType nim_content_safety, also needs nimEndpoint.
+#
+# Valid OOTB types in this build: token_count, rouge_1, faithfulness,
+# agent_goal_accuracy, custom_metric, cost, task_adherence,
+# agent_guideline_adherence, nim_jailbreak, nim_content_safety.
+timeout_sec: 60
+# Block on timeout in production so nothing slips through; use "score" while tuning.
+timeout_action: block
+guards:
+  # -------------------------------------------------------------------------
+  # ACTIVE: prompt length limit. Local, no deployment, works immediately.
+  # -------------------------------------------------------------------------
+  - name: Prompt Token Limit
+    type: ootb
+    ootbType: token_count
+    stage: prompt
+    intervention:
+      action: block
+      message: Prompt is too long; please shorten your question.
+      conditions:
+        - comparator: greaterThan
+          comparand: 6000
+
+  # -------------------------------------------------------------------------
+  # ACTIVE — PII / PHI detection (the important one for clinical data).
+  # Backed by the deployed "[Microsoft] Presidio PII Detection" guard model.
+  # Runs on BOTH the inbound prompt and the agent's response so patient
+  # identifiers are never accepted in or echoed out.
+  #
+  # IMPORTANT: targetName must be the LITERAL prediction column the model
+  # returns, not the model's base target. The moderation library reads
+  # `result_df[target_name]` verbatim and compares it (as a probability) to the
+  # threshold. This Binary model returns contains_pii_true_PREDICTION (the
+  # positive-class probability), so targetName is that column — NOT the base
+  # "contains_pii", which does not exist in the response and made the guard fail
+  # open (crash -> allow) on every call.
+  # -------------------------------------------------------------------------
+  - name: PII Detection (prompt)
+    type: model
+    deploymentId: 6aa772273637ed98d63503bb
+    stage: prompt
+    modelInfo:
+      inputColumnName: text
+      targetName: contains_pii_true_PREDICTION
+      targetType: Binary
+    intervention:
+      action: block
+      message: >-
+        This request was blocked because it appears to contain personally
+        identifiable information (PII/PHI). Remove patient identifiers and retry.
+      conditions:
+        - comparator: greaterThan
+          comparand: 0.5
+  - name: PII Detection (response)
+    type: model
+    deploymentId: 6aa772273637ed98d63503bb
+    stage: response
+    modelInfo:
+      inputColumnName: text
+      targetName: contains_pii_true_PREDICTION
+      targetType: Binary
+    intervention:
+      action: block
+      message: >-
+        The response was withheld because it appeared to contain personally
+        identifiable information (PII/PHI).
+      conditions:
+        - comparator: greaterThan
+          comparand: 0.5
+
+  # -------------------------------------------------------------------------
+  # PLACEHOLDER — prompt injection / jailbreak (NVIDIA NIM). Requires a NIM guard
+  # endpoint; set nimEndpoint (and ensure your org has NIM guard access).
+  #
+  # - name: Prompt Injection
+  #   type: ootb
+  #   ootbType: nim_jailbreak
+  #   stage: prompt
+  #   nimEndpoint: "<NIM_JAILBREAK_ENDPOINT_URL>"
+  #   intervention:
+  #     action: block
+  #     message: "This request was blocked as a potential prompt-injection attempt."
+
+  # -------------------------------------------------------------------------
+  # PLACEHOLDER — content safety / toxicity (NVIDIA NIM). Same requirement.
+  #
+  # - name: Content Safety
+  #   type: ootb
+  #   ootbType: nim_content_safety
+  #   stage: response
+  #   nimEndpoint: "<NIM_CONTENT_SAFETY_ENDPOINT_URL>"
+  #   intervention:
+  #     action: block
+  #     message: "The response was withheld by the content-safety guard."
