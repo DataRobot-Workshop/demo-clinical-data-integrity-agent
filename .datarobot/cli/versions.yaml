@@ -1,0 +1,92 @@
+---
+dr:
+  name: DataRobot CLI
+  minimum-version: 0.5.1
+  command: dr self version
+  url: https://github.com/datarobot-oss/cli
+  install:
+    macos: curl -fsSL https://cli.datarobot.com/install.sh | sh
+    linux: curl -fsSL https://cli.datarobot.com/install.sh | sh
+    windows: irm https://cli.datarobot.com/winstall | iex
+xp:
+  name: DataRobot XP plugin
+  minimum-version: 1.3.2
+  command: dr plugin version xp
+  url: https://github.com/datarobot-oss/cli
+  install:
+    macos: dr plugin install xp
+    linux: dr plugin install xp
+    windows: dr plugin install xp
+uv:
+  name: uv Python package manager
+  minimum-version: 0.10.3
+  command: uv self version
+  url: https://docs.astral.sh/uv/getting-started/installation/
+  install:
+    macos: curl -LsSf https://astral.sh/uv/install.sh | sh
+    linux: curl -LsSf https://astral.sh/uv/install.sh | sh
+    windows: irm https://astral.sh/uv/install.ps1 | iex
+node:
+  name: Node.js
+  minimum-version: 24.0.0
+  command: node --version
+  url: https://nodejs.org/
+  install:
+    macos: brew install node
+    linux: curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash - && sudo apt-get install -y nodejs
+    windows: winget install OpenJS.NodeJS
+git:
+  name: Git source control management tool
+  minimum-version: 2.30.0
+  command: git --version
+  url: https://git-scm.com/
+  install:
+    macos: brew install git
+    linux: apt-get install git
+    windows: winget install Git.Git
+task:
+  name: Taskfile task runner
+  minimum-version: 3.43.3
+  command: task --version
+  url: https://taskfile.dev/
+  install:
+    macos: brew install go-task
+    linux: sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b "$HOME/.local/bin"
+    windows: winget install Task.Task
+copier:
+  name: Copier project templating tool
+  minimum-version: 9.0.0
+  command: copier --version
+  url: https://copier.readthedocs.io/en/stable/
+  install:
+    macos: uv tool install copier
+    linux: uv tool install copier
+    windows: uv tool install copier
+drdev:
+  name: DataRobot dev services plugin
+  minimum-version: 3.19.0
+  command: dr plugin version dev
+  url: https://pypi.org/project/datarobot/
+  install:
+    macos: uv tool install --force "datarobot[core]>=3.19.0"
+    linux: uv tool install --force "datarobot[core]>=3.19.0"
+    windows: uv tool install --force "datarobot[core]>=3.19.0"
+pulumi:
+  name: Pulumi Infrastructure as Code tool
+  minimum-version: 3.262.0
+  command: pulumi version
+  url: https://www.pulumi.com/
+  install:
+    macos: brew install pulumi
+    linux: curl -fsSL https://get.pulumi.com | sh
+    windows: winget install Pulumi.Pulumi
+pulumi-datarobot:
+  name: DataRobot Pulumi resource plugin
+  minimum-version: 0.11.3
+  # Windows compatible check version
+  command: uv run python .datarobot/cli/scripts/pulumi-plugin-version.py datarobot
+  url: https://github.com/datarobot-community/pulumi-datarobot
+  install:
+    macos: pulumi plugin install resource datarobot 0.11.3 --server https://github.com/datarobot-community/pulumi-datarobot/releases/download/v0.11.3
+    linux: pulumi plugin install resource datarobot 0.11.3 --server https://github.com/datarobot-community/pulumi-datarobot/releases/download/v0.11.3
+    windows: pulumi plugin install resource datarobot 0.11.3 --server https://github.com/datarobot-community/pulumi-datarobot/releases/download/v0.11.3

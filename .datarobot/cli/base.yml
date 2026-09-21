@@ -1,0 +1,24 @@
+---
+root:
+  - env: PULUMI_CONFIG_PASSPHRASE
+    type: secret_string
+    default: ""
+    optional: true
+    help: >
+      Enter the passphrase used to encrypt and decrypt the private key. This value is required if you're not using Pulumi
+      Cloud.
+  - env: DATAROBOT_DEFAULT_USE_CASE
+    type: string
+    default: ""
+    optional: true
+    help: "Enter the default use case for this application. If not set, a new use case will be created automatically."
+  - env: OTEL_SDK_DISABLED
+    type: string
+    default: ""
+    optional: true
+    help: "Set to 'true' to disable all OpenTelemetry tracing. Leave empty to keep tracing enabled."
+  - env: PYTHONUTF8
+    type: string
+    default: "1"
+    optional: true
+    help: "Set to '1' to enable Python's UTF-8 mode. Needed on Windows, where the system locale encoding is not UTF-8."
